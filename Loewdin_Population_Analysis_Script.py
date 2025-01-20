@@ -3,10 +3,10 @@ import matplotlib.pyplot as plt
 import os
 
 # Change working directory to the location of the ORCA output file
-os.chdir(r"C:\Users\nickc\Documents\Data\ORCA\KLFeOdimer_BS_UNO_SVP")
+os.chdir(r"C:\Users\nickc\Documents\Data\Compiled_data\FeDimer\Calculations\KLFeOPeroxo_SCF_UNO_SVP")
 print(os.getcwd())  # Prints the current working directory
 
-output_file_path = r"C:\Users\nickc\Documents\Data\ORCA\KLFeOdimer_BS_UNO_SVP\KLFeOdimer_BS_UNO_SVP.out"
+output_file_path = r"C:\Users\nickc\Documents\Data\Compiled_data\FeDimer\Calculations\KLFeOPeroxo_SCF_UNO_SVP\KLFeOPeroxo_SCF_UNO.out"
 
 if os.path.exists(output_file_path):
     print("File found!")
@@ -108,11 +108,20 @@ def process_orca_output(file_path, atoms_to_analyze, mo_filter):
             row_offset = last_mo_index  # Adjust the row offset for the new page
             last_mo_index = 0  # Reset the last_mo_index for the next page
             continue
+
+        # Validate the data structure and skip invalid entries
+        if len(entry) < 3 or not isinstance(entry[2], list):
+            print(f"Skipping invalid entry: {entry}")
+            continue
           
         # Process the normal atomic data rows
-        atom_info, orbital, populations = entry
-        atom_number, atom_type = atom_info.split()
-        atom_number = int(atom_number)
+        try:
+            atom_info, orbital, populations = entry
+            atom_number, atom_type = atom_info.split()
+            atom_number = int(atom_number)  # Ensure atom_number is an integer
+        except ValueError as e:
+            print(f"Error parsing entry {entry}: {e}")
+            continue  # Skip invalid rows
 
         # Debug: Log the current row offset
         print(f"Atom: {atom_info}, Orbital: {orbital}, Populations: {populations}, Row Offset: {row_offset}")
@@ -158,13 +167,13 @@ def process_orca_output(file_path, atoms_to_analyze, mo_filter):
 
 # Inputs
 atoms_to_analyze = {
-    "Fe": {"orbitals": ["d"], "atoms": [67]},   # Element, Atomic orbitals, atom index number
+    "Fe": {"orbitals": ["d"], "atoms": []},   # Element, Atomic orbitals, atom index number
     "O": {"orbitals": ["s", "p"], "atoms": []},  
-    "N": {"orbitals": ["s", "p"], "atoms": [66, 73]},  
+    "N": {"orbitals": ["s", "p"], "atoms": []},  
     "P": {"orbitals": ["s", "p"], "atoms": []}   
 }
 
-mos_to_analyze = [518, 519, 520, 521, 522, 523, 524, 525, 526, 527, 528, 529, 530, 531]  # Specify MO indices
+mos_to_analyze = [520, 521, 522, 523, 524, 525, 526, 527, 528, 529]  # Specify MO indices
 
 # Process the file
 summary_df, individual_df = process_orca_output(output_file_path, atoms_to_analyze, mos_to_analyze)
